@@ -3,6 +3,8 @@ import java.io.FileNotFoundException;
 import java.util.*;
 
 public class Main {
+    public static HashMap<Item[], Integer> allPosibleBags = new HashMap<>();
+
     public static void main(String[] args) throws FileNotFoundException {
         ArrayList<Item[]> datasets = new ArrayList<>();
 
@@ -38,46 +40,48 @@ public class Main {
         int datasetNum = (int) (Math.random()*datasets.size());
         System.out.println("Analyzing dataset "+datasetNum);
 
-        int maxBagValue = 0;
-        List<Item> maxBag = new ArrayList<>();
 
         for (int i = 0; i < datasets.get(datasetNum).length; i++) {
-            Item[] bag = Combination.getBestBagWithSetLength(datasets.get(datasetNum), datasets.get(datasetNum).length, i);
-            int value = 0;
-            for (Item item : bag) {
-                value += item.getValue();
-            }
-            if(value>maxBagValue && value<capacity){
-                maxBagValue = value;
-                maxBag.clear();
-                maxBag.addAll(List.of(bag));
+            getBestBagWithSetLength(datasets.get(datasetNum), datasets.get(datasetNum).length, i);
+        }
+
+        Item[] maxBag = new Item[0];
+        int maxBagValue = 0;
+
+        for (Map.Entry e : allPosibleBags.entrySet()) {
+            if(maxBagValue < (int) e.getValue() && (int)e.getValue() < capacity){
+                maxBag = (Item[]) e.getKey();
+                maxBagValue = (int)e.getValue();
             }
         }
+
         System.out.println("Max value is "+maxBagValue+" from capacity "+capacity);
-        System.out.println(Arrays.toString(maxBag.toArray()));
+        System.out.println(Arrays.toString(Arrays.stream(maxBag).toArray()));
     }
 
-    static class Combination {
-        static Item[] combinationUtil(Item[] arr, Item[] data, int start, int end, int index, int r)
+        static void combinationUtil(Item[] arr, Item[] data, int start, int end, int index, int r)
         {
             if (index == r)
             {
 //                for (int j=0; j<r; j++)
 //                    System.out.print(data[j]+" ");
 //                System.out.println("");
-                return data;
+                int value = 0;
+                for (int j=0; j<r; j++){
+                    value += data[j].getValue();
+                }
+                Main.allPosibleBags.put(data, value);
+                return ;
             }
             for (int i=start; i<=end && end-i+1 >= r-index; i++)
             {
                 data[index] = arr[i];
                 combinationUtil(arr, data, i+1, end, index+1, r);
             }
-            return data;
         }
-        static Item[] getBestBagWithSetLength(Item[] arr, int n, int r)
+        static void getBestBagWithSetLength(Item[] arr, int n, int r)
         {
             Item[] data = new Item[r];
-            return combinationUtil(arr, data, 0, n-1, 0, r);
+            combinationUtil(arr, data, 0, n-1, 0, r);
         }
-    }
 }
